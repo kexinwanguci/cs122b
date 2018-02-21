@@ -47,11 +47,10 @@ public class MovieParserHandler extends DefaultHandler {
         	elementName = qName;
         	};
         if (qName.equals("film")) {  
-        		System.out.println("Here!!!!!!");
             movieIndex++;    
         
             m = new movie();   
-            System.out.println("======================开始遍历第"+movieIndex+"本书的内容================="); 
+            System.out.println("======================================="); 
  
         }  
         else if (qName.equals("t") ) {  
