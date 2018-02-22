@@ -1,46 +1,27 @@
 package Test;
-import Test.movie;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.xml.parsers.SAXParser;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.LinkedHashMap;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
-  
+import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;  
-import javax.xml.parsers.SAXParser;  
-import javax.xml.parsers.SAXParserFactory;  
-
-import org.xml.sax.SAXException;  
-import org.xml.sax.SAXParseException;  
-
- 
-import Test.MovieParserHandler;  
-
-class UpdateMovies {
+class UpdateGenres {
 	static String sqlStr = "jdbc:mysql://localhost:3306/122b";  
     static String rootName = "root"; 
     static String rootPwd = "0000";  
-    static String maxid = null;
+    static int maxid = 0;
+    private static String movieid = null;
+    private static LinkedHashMap<Integer, ArrayList<Integer>>Movie_Genreid = new LinkedHashMap<Integer, ArrayList<Integer>>();
   
     public static void writeToMysql(movie m) {  
         System.out.println(m);  
@@ -61,31 +42,40 @@ class UpdateMovies {
             con = DriverManager.getConnection(sqlStr, rootName,rootPwd);  
              
             String mtitle= m.getT();  
-            String myear = m.getYear();
-            String mdirector =m.getDirector();
-            String sql = "select max(id) from movies";
-           // String sql = "insert into movies(id,title,year,director) values(\""+title+"\",\""+year+"\",\"+director+\")";  
-            System.out.println(sql);  
             st =  con.createStatement(); 
+            String sql3 = "SELECT id from movies WHERE title = \""+mtitle+"\"; ";
+            ResultSet rs = st.executeQuery(sql3);
+            while(rs.next()) {
+            	if(rs.getString(1)!=null)
+            	{
+            		movieid = rs.getString(1);
+            	}
+            }
+            
+            String sql = "select max(id) from genres";
+     
+            
             ResultSet result = st.executeQuery(sql);  
             while(result.next()) {
-            maxid = (result.getString(1));
-            maxid = maxid.substring(0,3)+(Integer.parseInt(maxid.substring(2))+1);
+            	if (result.getString(1) == null)
+            		maxid = 0001;
+            	else 
+            		maxid = Integer.parseInt(result.getString(1))+1;
             }
-           System.out.println((String)maxid);
-           String insert = "If Not Exists (select * from movies where title=\""+mtitle+"\")"
-           		+ "BEGIN "
-           		+ "insert into movies(id,title,year,director) "
-           		+ "values(\""+maxid+"\",\""+mtitle+"\",\""+myear+"\",\""+mdirector+"\")"
-           		+ "END";
-           		
+            for (String x : m.getCat())
+            {
+            	System.out.println(x);
+            	String sql2 = "insert ignore into genres VALUES( \""+maxid+"\",\""+x+"\");";
+            	String sql4 = "INSERT INTO genres_in_movies VALUES(\""+movieid+"\",\""+maxid+"\");";
+            	maxid++;
+            	st.executeUpdate(sql2);
+            	st.executeUpdate(sql4);
+            }
+            
+            
+
+               
            
-//            String insert = "insert into movies(id,title,year,director) "
-//            		+ "values(\""+maxid+"\",\""+mtitle+"\",\""+myear+"\",\""+mdirector+"\") "
-//            		+ "WHERE NOT EXISTS (SELECT * FROM movies WHERE title = \""+mtitle+"\" AND director = \""+mdirector+"\")LIMIT 1;";
-//            st =  con.createStatement();
-           st.execute("insert into movies(id,title,year,director) values(\""+maxid+"\",\""+mtitle+"\",\""+myear+"\",\""+mdirector+"\");");
-//           		+ "WHERE Not Exists (select * from movies where title=\""+mtitle+"\");");
         } catch (SQLException e) {  
             e.printStackTrace();  
         }finally{  
@@ -97,7 +87,8 @@ class UpdateMovies {
             }  
         }  
     }  
-    
+//   
+
 
 
 public static void main(String[] args) {  
@@ -113,8 +104,11 @@ public static void main(String[] args) {
         for (movie m : handler.getMovieList()) { 
         		writeToMysql(m);
             System.out.println(m.getT());  
-            System.out.println(m.getDirector());    
-            System.out.println(m.getYear());  
+            System.out.println("CATEGORY");
+            for(String x : m.getCat())
+            {
+            	System.out.print("	"+x);
+            }
             System.out.println("----finish----");  
         }  
     } catch (ParserConfigurationException e) {  
@@ -127,8 +121,5 @@ public static void main(String[] args) {
         // TODO Auto-generated catch block  
         e.printStackTrace();  
     }  
-}  
-
-	  
 } 
-
+}

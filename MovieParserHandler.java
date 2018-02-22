@@ -16,8 +16,10 @@ public class MovieParserHandler extends DefaultHandler {
     public ArrayList<movie> getMovieList() {  
         return movieList;  
     }  
+    private ArrayList<String> cats = new ArrayList<String>();
     private String elementName="@#";
     private String directorname = null;
+    private String defaultyear = null;
   
     int movieIndex = 0;  
   
@@ -40,7 +42,9 @@ public class MovieParserHandler extends DefaultHandler {
     public void startElement(String uri, String localName, String qName,  
             Attributes attributes) throws SAXException {
     		String directorname = null;  
+    		
         super.startElement(uri, localName, qName, attributes); 
+        
         if(qName.equals("dirname"))
         	{
         	directorname = qName;
@@ -70,13 +74,18 @@ public class MovieParserHandler extends DefaultHandler {
     
     @Override  
     public void endElement(String uri, String localName, String qName)  
-            throws SAXException {    
+            throws SAXException {  
+    		
         super.endElement(uri, localName, qName);   
         if (qName.equals("film")) {  
             movieList.add(m);  
             m = null;  
             System.out.println("\n======================================");  
-        }  
+        } 
+        else if (qName.equals("dirstart")) {
+        		defaultyear = value.substring(1);
+        		
+        }
         else if (qName.equals("t")) {  
         	
             m.setT(value);  
@@ -88,10 +97,30 @@ public class MovieParserHandler extends DefaultHandler {
             directorname = value;  
         }
         else if (qName.equals("year")) { 
-            m.setYear(value);  
+        	boolean b = false;
+        	int y =0;
+        	try {
+        		 y=Integer.parseInt(value); 
+        		b = true;}
+        	catch(Exception ex){
+        		System.out.println(ex.getMessage());
+        		
+        	}
+        	if (b == true&& y >1800&&y<2019){
+        		m.setYear(value);
+        	}
+        	else
+        	{
+        		System.out.println("defaultyear");
+        		m.setYear(defaultyear);
+        		System.out.println("Lack of year information. Using default year!");
+        	}
+      
+        	
         }  
         else if (qName.equals("cat")) {
             m.setCat(value);  
+            System.out.println("Category"+value);
         }  
         else
         {
